@@ -103,7 +103,7 @@ namespace DatabaseService
             await RE_Collection.InsertOneAsync(recommendation);
         }
 
-        public async Task RemoveRecommendation(int recommendationId)
+        public async Task RemoveRecommendation(Guid recommendationId)
         {
             await RE_Collection.DeleteOneAsync(Builders<Recommendation>.Filter.Eq("Id", recommendationId));
         }

@@ -4,7 +4,7 @@ namespace Common
 {
     public class Recommendation
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
 
         public string Place { get; set; }
 

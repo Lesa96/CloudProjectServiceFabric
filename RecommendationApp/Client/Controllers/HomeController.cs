@@ -45,15 +45,16 @@ namespace Client.Controllers
                 recomendations = await servicePartitionClient.InvokeWithRetryAsync(client => client.Channel.GetRecommendations());
 
             }
-            return View(recomendations);
+            
+            return View("Index", recomendations);
 
         }
 
         [HttpPost]
         [Route("post")]
-        public async Task AddRecommendation([FromBody] Recommendation recommendation)
+        public async Task<IActionResult> AddRecommendation([FromForm]string place , [FromForm] string details, [FromForm] DateTime arrangmentDate)
         {
-
+            Recommendation recommendation = new Recommendation() { Id = Guid.NewGuid(), Place = place, Details = details, ArrangmentDate = arrangmentDate };
             FabricClient fabricClient = new FabricClient();
             var binding = WcfUtility.CreateTcpClientBinding();
 
@@ -71,6 +72,8 @@ namespace Client.Controllers
                 await servicePartitionClient.InvokeWithRetryAsync(client => client.Channel.AddRecomendation(recommendation));
 
             }
+
+            return await Index();
         }
 
         [HttpGet]
@@ -105,7 +108,7 @@ namespace Client.Controllers
         public async Task<IActionResult> Getdb()
         {
             Recommendation recommendation = new Recommendation();
-            recommendation.Id = 0;
+            recommendation.Id = Guid.NewGuid();
             recommendation.ArrangmentDate = DateTime.Now;
             recommendation.To = recommendation.ArrangmentDate.AddDays(365);
             recommendation.Place = "Kragujevac";

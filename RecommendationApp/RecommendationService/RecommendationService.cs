@@ -27,7 +27,7 @@ namespace RecommendationService
         {
             recommendation.To = recommendation.ArrangmentDate.AddDays(365);
             var stateManager = this.StateManager;
-            var recommendations = await stateManager.GetOrAddAsync<IReliableDictionary<int, Recommendation>>("recommendationsFramework");
+            var recommendations = await stateManager.GetOrAddAsync<IReliableDictionary<Guid, Recommendation>>("recommendationsFramework");
 
             try
             {
@@ -68,7 +68,7 @@ namespace RecommendationService
         public async Task<List<Recommendation>> GetRecommendations()
         {
             var stateManager = this.StateManager;
-            var recommendations = await stateManager.GetOrAddAsync<IReliableDictionary<int, Recommendation>>("recommendationsFramework");
+            var recommendations = await stateManager.GetOrAddAsync<IReliableDictionary<Guid, Recommendation>>("recommendationsFramework");
             List<Recommendation> recommendationList = new List<Recommendation>();
 
             try
@@ -122,7 +122,7 @@ namespace RecommendationService
             //       or remove this RunAsync override if it's not needed in your service.
 
             var myDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<string, long>>("myDictionary");
-            var recommendations = await this.StateManager.GetOrAddAsync<IReliableDictionary<int, Recommendation>>("recommendationsFramework");
+            var recommendations = await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, Recommendation>>("recommendationsFramework");
 
             while (true)
             {
@@ -160,10 +160,11 @@ namespace RecommendationService
                                 {
                                     await recommendations.AddOrUpdateAsync(tx, recommendation.Id, recommendation, (key, value) => value);
 
-                                    await tx.CommitAsync();
+                                    
                                 }
                                 
                             }
+                            await tx.CommitAsync();
 
                             ((ICommunicationObject)client).Close();
                             myChannelFactory.Close();

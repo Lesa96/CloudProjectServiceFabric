@@ -1,7 +1,54 @@
-﻿@{
+﻿@model IEnumerable<Common.Recommendation>
+@{
     ViewData["Title"] = "Home Page";
 }
 
 <div>
-    <p>Working</p>
+    <h1>Touristic recommendations: </h1>
+
+    <div style="border: 2px dotted black; padding: 30px">
+
+        <h3>Add new touristic recommendation</h3>
+
+        <form action="/home/post" method="post">
+            <label>Place:</label>
+            <input type="text" name="place" />
+            
+            <label>Details:</label>
+            <input type="text" name="details" />
+
+            <label>Date</label>
+            <input type="date" name="arrangmentDate" />
+
+            <div style="margin-top: 15px; text-align: center">
+                <button type="submit">Add</button>
+            </div>
+        </form>
+    </div>
+
+    <div style="border: 2px dotted black; padding: 30px">
+        <h3>Available touristic recommendations: </h3>
+        <table>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    @*<td>
+                        @Html.DisplayFor(modelItem => item.Id)
+                    </td>*@
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Place)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Details)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.ArrangmentDate)
+                    </td>
+                    <td>
+                    </td>
+                </tr>
+            }
+
+        </table>
+    </div>
 </div>
