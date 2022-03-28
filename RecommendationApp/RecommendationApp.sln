@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Common", "Common\Common.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WeatherService", "WeatherService\WeatherService.csproj", "{5AD04E2A-ACF9-40D0-8618-4DBAEA903693}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatabaseService", "DatabaseService\DatabaseService.csproj", "{7F9233F5-ED31-401B-99E6-E7389A6A97E0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -57,6 +59,12 @@ Global
 		{5AD04E2A-ACF9-40D0-8618-4DBAEA903693}.Release|Any CPU.ActiveCfg = Release|x64
 		{5AD04E2A-ACF9-40D0-8618-4DBAEA903693}.Release|x64.ActiveCfg = Release|x64
 		{5AD04E2A-ACF9-40D0-8618-4DBAEA903693}.Release|x64.Build.0 = Release|x64
+		{7F9233F5-ED31-401B-99E6-E7389A6A97E0}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{7F9233F5-ED31-401B-99E6-E7389A6A97E0}.Debug|x64.ActiveCfg = Debug|x64
+		{7F9233F5-ED31-401B-99E6-E7389A6A97E0}.Debug|x64.Build.0 = Debug|x64
+		{7F9233F5-ED31-401B-99E6-E7389A6A97E0}.Release|Any CPU.ActiveCfg = Release|x64
+		{7F9233F5-ED31-401B-99E6-E7389A6A97E0}.Release|x64.ActiveCfg = Release|x64
+		{7F9233F5-ED31-401B-99E6-E7389A6A97E0}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -31,7 +31,7 @@ namespace RecommendationService
             {
                 using (var tx = stateManager.CreateTransaction())
                 {
-                    await recommendations.AddOrUpdateAsync(tx, recommendation.ID, recommendation, (key, value) => value);
+                    await recommendations.AddOrUpdateAsync(tx, recommendation.Id, recommendation, (key, value) => value);
 
                     await tx.CommitAsync();
                 }

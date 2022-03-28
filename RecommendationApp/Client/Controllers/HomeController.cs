@@ -99,5 +99,40 @@ namespace Client.Controllers
             return View("Index");
 
         }
+
+        [HttpGet]
+        [Route("db")]
+        public async Task<IActionResult> Getdb()
+        {
+            Recommendation recommendation = new Recommendation();
+            recommendation.Id = 0;
+            recommendation.ArrangmentDate = DateTime.Now;
+            recommendation.To = recommendation.ArrangmentDate.AddDays(365);
+            recommendation.Place = "Kragujevac";
+            recommendation.Details = "Lep grad";
+
+            var binding = new NetTcpBinding(SecurityMode.None);
+            var endpoint = new EndpointAddress("net.tcp://localhost:9333/DatabaseServiceEndpoint");
+            using (var myChannelFactory = new ChannelFactory<IDatabaseService>(binding, endpoint))
+            {
+                try
+                {
+                    var client = myChannelFactory.CreateChannel();
+                    await client.AddRecommendation(recommendation);
+
+                    var recom = await client.GetAllRecommendations();
+
+                    ((ICommunicationObject)client).Close();
+                    myChannelFactory.Close();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Exception in GetWeather Getdb: " + e.Message);
+                }
+            }
+
+            return View("Index");
+
+        }
     }
 }

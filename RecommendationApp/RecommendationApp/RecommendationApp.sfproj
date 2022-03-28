@@ -39,6 +39,7 @@
     <ProjectReference Include="..\Client\Client.csproj">
       <ServiceLaunchUrl>http://localhost:{ServicePort}/</ServiceLaunchUrl>
     </ProjectReference>
+    <ProjectReference Include="..\DatabaseService\DatabaseService.csproj" />
     <ProjectReference Include="..\RecommendationService\RecommendationService.csproj" />
     <ProjectReference Include="..\WeatherService\WeatherService.csproj" />
   </ItemGroup>
