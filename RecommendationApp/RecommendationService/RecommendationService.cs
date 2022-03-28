@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Fabric;
 using System.Linq;
+using System.ServiceModel;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -24,6 +25,7 @@ namespace RecommendationService
 
         public async Task AddRecomendation(Recommendation recommendation)
         {
+            recommendation.To = recommendation.ArrangmentDate.AddDays(365);
             var stateManager = this.StateManager;
             var recommendations = await stateManager.GetOrAddAsync<IReliableDictionary<int, Recommendation>>("recommendationsFramework");
 
@@ -31,6 +33,26 @@ namespace RecommendationService
             {
                 using (var tx = stateManager.CreateTransaction())
                 {
+
+                    var binding = new NetTcpBinding(SecurityMode.None);
+                    var endpoint = new EndpointAddress("net.tcp://localhost:9333/DatabaseServiceEndpoint");
+                    using (var myChannelFactory = new ChannelFactory<IDatabaseService>(binding, endpoint))
+                    {
+                        try
+                        {
+                            var client = myChannelFactory.CreateChannel();
+
+                            await client.AddRecommendation(recommendation);
+
+                            ((ICommunicationObject)client).Close();
+                            myChannelFactory.Close();
+                        }
+                        catch (Exception e)
+                        {
+                            ServiceEventSource.Current.ServiceMessage(this.Context, "Exception in RecommendationService - AddRecomendation(), DatabaseService: " + e.Message);
+                        }
+                    }
+
                     await recommendations.AddOrUpdateAsync(tx, recommendation.Id, recommendation, (key, value) => value);
 
                     await tx.CommitAsync();
@@ -100,6 +122,7 @@ namespace RecommendationService
             //       or remove this RunAsync override if it's not needed in your service.
 
             var myDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<string, long>>("myDictionary");
+            var recommendations = await this.StateManager.GetOrAddAsync<IReliableDictionary<int, Recommendation>>("recommendationsFramework");
 
             while (true)
             {
@@ -107,19 +130,52 @@ namespace RecommendationService
 
                 using (var tx = this.StateManager.CreateTransaction())
                 {
-                    var result = await myDictionary.TryGetValueAsync(tx, "Counter");
+                    //var result = await myDictionary.TryGetValueAsync(tx, "Counter");
 
-                    ServiceEventSource.Current.ServiceMessage(this.Context, "Current Counter Value: {0}",
-                        result.HasValue ? result.Value.ToString() : "Value does not exist.");
+                    //ServiceEventSource.Current.ServiceMessage(this.Context, "Current Counter Value: {0}",
+                    //    result.HasValue ? result.Value.ToString() : "Value does not exist.");
 
-                    await myDictionary.AddOrUpdateAsync(tx, "Counter", 0, (key, value) => ++value);
+                    //await myDictionary.AddOrUpdateAsync(tx, "Counter", 0, (key, value) => ++value);
 
-                    // If an exception is thrown before calling CommitAsync, the transaction aborts, all changes are 
-                    // discarded, and nothing is saved to the secondary replicas.
-                    await tx.CommitAsync();
+                    //// If an exception is thrown before calling CommitAsync, the transaction aborts, all changes are 
+                    //// discarded, and nothing is saved to the secondary replicas.
+                    //await tx.CommitAsync();
+
+                    var binding = new NetTcpBinding(SecurityMode.None);
+                    var endpoint = new EndpointAddress("net.tcp://localhost:9333/DatabaseServiceEndpoint");
+                    using (var myChannelFactory = new ChannelFactory<IDatabaseService>(binding, endpoint))
+                    {
+                        try
+                        {
+                            var client = myChannelFactory.CreateChannel();
+
+                            var recoms = await client.GetAllRecommendations();
+                            foreach (Recommendation recommendation in recoms)
+                            {
+                                if(recommendation.To <= DateTime.Now)
+                                {
+                                    await client.RemoveRecommendation(recommendation.Id);
+                                }
+                                else
+                                {
+                                    await recommendations.AddOrUpdateAsync(tx, recommendation.Id, recommendation, (key, value) => value);
+
+                                    await tx.CommitAsync();
+                                }
+                                
+                            }
+
+                            ((ICommunicationObject)client).Close();
+                            myChannelFactory.Close();
+                        }
+                        catch (Exception e)
+                        {
+                            ServiceEventSource.Current.ServiceMessage(this.Context, "Exception in RecommendationService - RunAsync(), DatabaseService: " + e.Message);
+                        }
+                    }
                 }
 
-                await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+                await Task.Delay(TimeSpan.FromDays(1), cancellationToken);
             }
         }
     }

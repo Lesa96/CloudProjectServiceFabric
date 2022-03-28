@@ -13,5 +13,7 @@ namespace Common
         Task<List<Recommendation>> GetAllRecommendations();
         [OperationContract]
         Task AddRecommendation(Recommendation recommendation);
+        [OperationContract]
+        Task RemoveRecommendation(int recommendationId);
     }
 }
