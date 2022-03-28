@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Fabric;
 using System.Linq;
+using System.ServiceModel;
 using System.Threading.Tasks;
 
 namespace Client.Controllers
@@ -70,6 +71,33 @@ namespace Client.Controllers
                 await servicePartitionClient.InvokeWithRetryAsync(client => client.Channel.AddRecomendation(recommendation));
 
             }
+        }
+
+        [HttpGet]
+        [Route("weather")]
+        public async Task<IActionResult> GetWeather(string city = "Belgrade")
+        {
+            string weather = "No data";
+            var binding = new NetTcpBinding(SecurityMode.None);
+            var endpoint = new EndpointAddress("net.tcp://localhost:9111/WeatherServiceEndpoint");
+            using (var myChannelFactory = new ChannelFactory<IWeatherService>(binding, endpoint))
+            {
+                try
+                {
+                    var client = myChannelFactory.CreateChannel();
+                    weather = await client.GetWeatherForLocation(city);
+
+                    ((ICommunicationObject)client).Close();
+                    myChannelFactory.Close();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Exception in GetWeather controller: " + e.Message);
+                }
+            }
+
+            return View("Index");
+
         }
     }
 }
