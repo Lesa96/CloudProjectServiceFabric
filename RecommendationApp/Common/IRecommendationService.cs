@@ -13,5 +13,7 @@ namespace Common
         Task<List<Recommendation>> GetRecommendations();
         [OperationContract]
         Task AddRecomendation(Recommendation recommendation);
+        [OperationContract]
+        Task<List<Recommendation>> GetHistoryRecommendations(string place);
     }
 }

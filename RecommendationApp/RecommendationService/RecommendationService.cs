@@ -28,6 +28,7 @@ namespace RecommendationService
             recommendation.To = recommendation.ArrangmentDate.AddDays(365);
             var stateManager = this.StateManager;
             var recommendations = await stateManager.GetOrAddAsync<IReliableDictionary<Guid, Recommendation>>("recommendationsFramework");
+            var historyRecommendationList = await this.StateManager.GetOrAddAsync<IReliableDictionary<string, List<Recommendation>>>("historyRecommendations");
 
             try
             {
@@ -43,6 +44,7 @@ namespace RecommendationService
                             var client = myChannelFactory.CreateChannel();
 
                             await client.AddRecommendation(recommendation);
+                            
 
                             ((ICommunicationObject)client).Close();
                             myChannelFactory.Close();
@@ -52,8 +54,43 @@ namespace RecommendationService
                             ServiceEventSource.Current.ServiceMessage(this.Context, "Exception in RecommendationService - AddRecomendation(), DatabaseService: " + e.Message);
                         }
                     }
+                    var enumerableData = await recommendations.CreateEnumerableAsync(tx);
+                    var enumerator = enumerableData.GetAsyncEnumerator();
+                    try
+                    {
+                        while (await enumerator.MoveNextAsync(new CancellationToken()))
+                        {
+                            if (enumerator.Current.Value.Place.Equals(recommendation.Place))
+                            {
+                                await recommendations.TryRemoveAsync(tx, enumerator.Current.Key);
+                                break;
+                            }
 
+                        }
+                    }
+                    catch (Exception e)
+                    {
+
+                        
+                    }
+                    
                     await recommendations.AddOrUpdateAsync(tx, recommendation.Id, recommendation, (key, value) => value);
+
+                    //history:
+                    var history = await historyRecommendationList.TryGetValueAsync(tx, recommendation.Place);
+                    if(history.HasValue == true && history.Value != null)
+                    {
+                        history.Value.Add(recommendation);
+                        await historyRecommendationList.AddOrUpdateAsync(tx, recommendation.Place, history.Value, (key, value) => value);
+                    }
+                    else
+                    {
+                        var newHirstory = new List<Recommendation>();
+                        await historyRecommendationList.AddOrUpdateAsync(tx, recommendation.Place, newHirstory, (key, value) => value);
+                    }
+                        
+
+                    
 
                     await tx.CommitAsync();
                 }
@@ -93,6 +130,40 @@ namespace RecommendationService
             return recommendationList;
         }
 
+        public async Task<List<Recommendation>> GetHistoryRecommendations(string place)
+        {
+            var stateManager = this.StateManager;
+            var historyRecommendationList = await this.StateManager.GetOrAddAsync<IReliableDictionary<string, List<Recommendation>>>("historyRecommendations");
+            List<Recommendation> recommendationList = new List<Recommendation>();
+
+            try
+            {
+                using (var tx = stateManager.CreateTransaction())
+                {
+                    var enumerableData = await historyRecommendationList.CreateEnumerableAsync(tx);
+                    var enumerator = enumerableData.GetAsyncEnumerator();
+
+                    while (await enumerator.MoveNextAsync(new CancellationToken()))
+                    {
+                        if(enumerator.Current.Key.Equals(place))
+                        {
+                            recommendationList.AddRange(enumerator.Current.Value);
+                            break;
+                        }
+                        
+                    }
+                    await tx.CommitAsync();
+                }
+            }
+            catch (Exception e)
+            {
+
+                ServiceEventSource.Current.ServiceMessage(this.Context, "Exception in RecommendationService - GetHistoryRecommendations():" + e.Message);
+            }
+
+            return recommendationList;
+        }
+
         /// <summary>
         /// Optional override to create listeners (e.g., HTTP, Service Remoting, WCF, etc.) for this service replica to handle client or user requests.
         /// </summary>
@@ -123,6 +194,7 @@ namespace RecommendationService
 
             var myDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<string, long>>("myDictionary");
             var recommendations = await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, Recommendation>>("recommendationsFramework");
+            var historyRecommendationList = await this.StateManager.GetOrAddAsync<IReliableDictionary<string, List<Recommendation>>>("historyRecommendations");
 
             while (true)
             {
@@ -154,13 +226,17 @@ namespace RecommendationService
                             {
                                 if(recommendation.To <= DateTime.Now)
                                 {
-                                    await client.RemoveRecommendation(recommendation.Id);
+                                    await client.RemoveRecommendation(recommendation);
                                 }
                                 else
                                 {
                                     await recommendations.AddOrUpdateAsync(tx, recommendation.Id, recommendation, (key, value) => value);
 
-                                    
+                                    //history:
+                                    var historyRecom = await client.GetHistoryRecommendation(recommendation.Place);
+                                    await historyRecommendationList.AddOrUpdateAsync(tx, recommendation.Place, historyRecom, (key, value) => value);
+
+
                                 }
                                 
                             }

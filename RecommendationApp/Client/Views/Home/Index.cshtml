@@ -37,7 +37,7 @@
 
         <div style="border: 2px dotted black; padding: 30px">
             <h3>Available touristic recommendations: </h3>
-            <table border="">
+            <table>
                 <tr>
                     <td>
                         Place:
@@ -56,8 +56,8 @@
                 {
                     <tr>
                         @*<td>
-                                @Html.DisplayFor(modelItem => item.Id)
-                            </td>*@
+                            @Html.DisplayFor(modelItem => item.Id)
+                        </td>*@
                         <td>
                             @Html.DisplayFor(modelItem => item.Place)
                         </td>
@@ -71,11 +71,47 @@
                             @Html.DisplayFor(modelItem => item.Weather)
                         </td>
                         <td>
+                            <a href="@Url.Action("history","home", new {place=item.Place })"
+                               class="btn btn-primary btn-lg">See history</a>
                         </td>
                     </tr>
                 }
-
+                <tr>
+                    <td>
+                        <input type="button" value="Refresh" onclick="location.href='@Url.Action("refresh", "home")'" />
+                    </td>
+                </tr>
             </table>
         </div>
+
+        @if (@ViewBag?.history != null && @ViewBag?.history.Count > 0)
+        {
+            <div style="border: 2px dotted black; padding: 30px">
+                <h3>History:</h3>
+                <table>
+                    <tr>
+                        <td>
+                            Place:
+                        </td>
+                        <td>
+                            Weather:
+                        </td>
+                    </tr>
+                    @for (var i = 0; i < @ViewBag?.history?.Count; i++)
+                    {
+                        <tr>
+                            <td>
+                                @ViewBag?.history?[i].Place
+                            </td>
+
+                            <td>
+                                @ViewBag?.history?[i].Weather
+                            </td>
+                        </tr>
+                    }
+                </table>
+            </div>
+        }
+
     </div>
 </body>

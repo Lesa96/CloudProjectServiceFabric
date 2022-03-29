@@ -27,6 +27,14 @@ namespace Client.Controllers
         //http://localhost:8819/home/get
         public async Task<IActionResult> Index()
         {
+            List<Recommendation> recomendations = await GetRecommendations();
+
+            return View("Index", recomendations);
+
+        }
+
+        private async Task<List<Recommendation>> GetRecommendations()
+        {
             List<Recommendation> recomendations = new List<Recommendation>();
             FabricClient fabricClient = new FabricClient();
             var binding = WcfUtility.CreateTcpClientBinding();
@@ -46,29 +54,11 @@ namespace Client.Controllers
 
             }
 
-            string weather = "";
-            foreach (Recommendation rec in recomendations)
-            {
-                weather = await this.GetWeather(rec.Place);
-                if(weather != null && weather != "")
-                {
-                    rec.Weather = weather;
-                }
-                else
-                {
-                    rec.Weather = "No data available";
-                }
-            }
-            
-            return View("Index", recomendations);
-
+            return recomendations;
         }
 
-        [HttpPost]
-        [Route("post")]
-        public async Task<IActionResult> AddRecommendation([FromForm]string place , [FromForm] string details, [FromForm] DateTime arrangmentDate)
+        private async Task AddRecommendationInDb(Recommendation recommendation)
         {
-            Recommendation recommendation = new Recommendation() { Id = Guid.NewGuid(), Place = place, Details = details, ArrangmentDate = arrangmentDate };
             FabricClient fabricClient = new FabricClient();
             var binding = WcfUtility.CreateTcpClientBinding();
 
@@ -86,13 +76,75 @@ namespace Client.Controllers
                 await servicePartitionClient.InvokeWithRetryAsync(client => client.Channel.AddRecomendation(recommendation));
 
             }
+        }
+
+        [HttpPost]
+        [Route("post")]
+        public async Task<IActionResult> AddRecommendation([FromForm]string place , [FromForm] string details, [FromForm] DateTime arrangmentDate)
+        {
+            Recommendation recommendation = new Recommendation() { Id = Guid.NewGuid(), Place = place, Details = details, ArrangmentDate = arrangmentDate };
+            string weather = await this.GetWeather(place);
+            recommendation.Weather = weather;
+
+            await AddRecommendationInDb(recommendation);
 
             return await Index();
         }
 
         [HttpGet]
-        [Route("weather")]
-        public async Task<string> GetWeather(string city = "Belgrade")
+        [Route("refresh")]
+        public async Task<ActionResult> GetRefresh()
+        {
+            List<Recommendation> recomendations = await GetRecommendations();
+            string weather = "";
+            foreach (Recommendation rec in recomendations)
+            {
+                weather = await this.GetWeather(rec.Place);
+                if (weather != null && weather != "")
+                {
+                    rec.Weather = weather;
+                    Recommendation recommendation = new Recommendation() { Id = Guid.NewGuid(), Place = rec.Place, Details = rec.Details, ArrangmentDate = rec.ArrangmentDate, Weather = weather, To = rec.To };
+                    await AddRecommendationInDb(recommendation);
+                }
+                else
+                {
+                    rec.Weather = "No data available";
+                }
+            }
+
+            return View("Index", recomendations);
+        }
+
+        [HttpGet]
+        [Route("history")]
+        public async Task<IActionResult> GetHistory(string place)
+        {
+            List<Recommendation> recomendations = new List<Recommendation>();
+            FabricClient fabricClient = new FabricClient();
+            var binding = WcfUtility.CreateTcpClientBinding();
+
+            var partitions = await fabricClient.QueryManager.GetPartitionListAsync(new Uri(fabricService + "RecommendationService"));
+            int partitionSelect = 0;
+
+            for (int i = 0; i < partitions.Count; i++)
+            {
+                ServicePartitionClient<WcfCommunicationClient<IRecommendationService>> servicePartitionClient = new ServicePartitionClient<WcfCommunicationClient<IRecommendationService>>
+                    (
+                     new WcfCommunicationClientFactory<IRecommendationService>(clientBinding: binding),
+                     new Uri(fabricService + "RecommendationService"),
+                     new ServicePartitionKey(partitionSelect % partitions.Count)
+                     );
+                recomendations = await servicePartitionClient.InvokeWithRetryAsync(client => client.Channel.GetHistoryRecommendations(place));
+
+            }
+            ViewBag.history = recomendations;
+
+            return await Index();
+        }
+
+
+
+        private async Task<string> GetWeather(string city = "Belgrade")
         {
             string weather = "No data";
             var binding = new NetTcpBinding(SecurityMode.None);

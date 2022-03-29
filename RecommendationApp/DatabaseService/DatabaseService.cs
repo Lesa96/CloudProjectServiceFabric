@@ -95,17 +95,45 @@ namespace DatabaseService
         public async Task<List<Recommendation>> GetAllRecommendations()
         {
             var results = await RE_Collection.FindAsync(_ => true);
+            List<Recommendation> returnRecom = new List<Recommendation>();
+            var res = results.ToList();
+
+            foreach (Recommendation recommendation in res)
+            {
+                var available = returnRecom.Where(x => x.Place.Equals(recommendation.Place)).FirstOrDefault();
+                if (available != null)
+                {
+                    returnRecom.Remove(available);                                      
+                }
+                returnRecom.Add(recommendation);
+
+            }
+            return returnRecom;
+        }
+
+        public async Task<List<Recommendation>> GetHistoryRecommendation(string place)
+        {
+            var results = await RE_Collection.FindAsync(x => x.Place.Equals(place));
             return results.ToList();
         }
 
         public async Task AddRecommendation(Recommendation recommendation)
         {
-            await RE_Collection.InsertOneAsync(recommendation);
+            try
+            {
+                await RE_Collection.InsertOneAsync(recommendation);
+            }
+            catch (Exception e)
+            {
+
+                ServiceEventSource.Current.ServiceMessage(this.Context, "Error in adding into db: " + e.Message);
+            }
+            
         }
 
-        public async Task RemoveRecommendation(Guid recommendationId)
+        public async Task RemoveRecommendation(Recommendation recommendation)
         {
-            await RE_Collection.DeleteOneAsync(Builders<Recommendation>.Filter.Eq("Id", recommendationId));
+            await RE_Collection.DeleteOneAsync(Builders<Recommendation>.Filter.Eq("Place", recommendation.Place));
         }
     }
 }

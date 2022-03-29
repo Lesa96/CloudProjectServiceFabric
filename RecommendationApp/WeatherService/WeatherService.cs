@@ -97,7 +97,7 @@ namespace WeatherService
                     {
                         returnString += item + ", ";
                     }
-                    returnString +=  "Temperature: " +  weatherResposne.Current.Temperature.ToString() + " C" + ", Time: " + weatherResposne.Current.ObservationTime;
+                    returnString +=  "Temperature: " +  weatherResposne.Current.Temperature.ToString() + " C" + ", Time: " + weatherResposne.Location.Localtime;
                 }
                 catch (Exception e)
                 {

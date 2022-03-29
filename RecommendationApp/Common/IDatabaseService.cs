@@ -14,6 +14,9 @@ namespace Common
         [OperationContract]
         Task AddRecommendation(Recommendation recommendation);
         [OperationContract]
-        Task RemoveRecommendation(Guid recommendationId);
+        Task RemoveRecommendation(Recommendation recommendation);
+
+        [OperationContract]
+        Task<List<Recommendation>> GetHistoryRecommendation(string place);
     }
 }
