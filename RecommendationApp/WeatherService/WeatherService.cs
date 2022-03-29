@@ -80,9 +80,10 @@ namespace WeatherService
         {
             //https://weatherstack.com/documentation
             //http://api.weatherstack.com/current?access_key=93602e2d7324bc707a86b984e679c60e&query=Novi%20Sad
+            location = location.Replace(" ", "%20");
             //Belgrade
             HttpClient httpClient = new HttpClient();
-            string returnString = "Error in service";
+            string returnString = "";
 
             HttpResponseMessage response = await httpClient.GetAsync(api + location);
             if (response.IsSuccessStatusCode)
@@ -91,12 +92,18 @@ namespace WeatherService
                 {
                     returnString = await response.Content.ReadAsStringAsync();
                     WeatherResposne weatherResposne = WeatherResposne.FromJson(returnString);
-                    returnString = weatherResposne.Current.Temperature.ToString();
+                    returnString = "";
+                    foreach (string item in weatherResposne.Current.WeatherDescriptions)
+                    {
+                        returnString += item + ", ";
+                    }
+                    returnString +=  "Temperature: " +  weatherResposne.Current.Temperature.ToString() + " C" + ", Time: " + weatherResposne.Current.ObservationTime;
                 }
                 catch (Exception e)
                 {
 
                     ServiceEventSource.Current.ServiceMessage(this.Context, "Error in GetWeatherForLocation: " + e.Message);
+                    returnString = "";
                 }
                 
 

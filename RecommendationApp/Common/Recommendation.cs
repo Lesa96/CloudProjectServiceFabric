@@ -12,6 +12,8 @@ namespace Common
 
         public string Details { get; set; }
 
+        public string Weather { get; set; }
+
         //hystory database:
         public DateTime To { get; set; }
     }

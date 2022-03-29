@@ -45,6 +45,20 @@ namespace Client.Controllers
                 recomendations = await servicePartitionClient.InvokeWithRetryAsync(client => client.Channel.GetRecommendations());
 
             }
+
+            string weather = "";
+            foreach (Recommendation rec in recomendations)
+            {
+                weather = await this.GetWeather(rec.Place);
+                if(weather != null && weather != "")
+                {
+                    rec.Weather = weather;
+                }
+                else
+                {
+                    rec.Weather = "No data available";
+                }
+            }
             
             return View("Index", recomendations);
 
@@ -78,7 +92,7 @@ namespace Client.Controllers
 
         [HttpGet]
         [Route("weather")]
-        public async Task<IActionResult> GetWeather(string city = "Belgrade")
+        public async Task<string> GetWeather(string city = "Belgrade")
         {
             string weather = "No data";
             var binding = new NetTcpBinding(SecurityMode.None);
@@ -99,7 +113,7 @@ namespace Client.Controllers
                 }
             }
 
-            return View("Index");
+            return weather;
 
         }
 

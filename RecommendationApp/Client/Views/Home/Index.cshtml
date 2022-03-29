@@ -3,52 +3,79 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div>
-    <h1>Touristic recommendations: </h1>
+<head>
+    <style>
+        table, th, td {
+            border: 1px solid black;
+        }
+    </style>
+</head>
 
-    <div style="border: 2px dotted black; padding: 30px">
+<body>
+    <div>
+        <h1>Touristic recommendations: </h1>
 
-        <h3>Add new touristic recommendation</h3>
+        <div style="border: 2px dotted black; padding: 30px">
 
-        <form action="/home/post" method="post">
-            <label>Place:</label>
-            <input type="text" name="place" />
-            
-            <label>Details:</label>
-            <input type="text" name="details" />
+            <h3>Add new touristic recommendation</h3>
 
-            <label>Date</label>
-            <input type="date" name="arrangmentDate" />
+            <form action="/home/post" method="post">
+                <label>Place:</label>
+                <input type="text" name="place" />
 
-            <div style="margin-top: 15px; text-align: center">
-                <button type="submit">Add</button>
-            </div>
-        </form>
-    </div>
+                <label>Details:</label>
+                <input type="text" name="details" />
 
-    <div style="border: 2px dotted black; padding: 30px">
-        <h3>Available touristic recommendations: </h3>
-        <table>
-            @foreach (var item in Model)
-            {
+                <label>Date</label>
+                <input type="date" name="arrangmentDate" />
+
+                <div style="margin-top: 15px; text-align: center">
+                    <button type="submit">Add</button>
+                </div>
+            </form>
+        </div>
+
+        <div style="border: 2px dotted black; padding: 30px">
+            <h3>Available touristic recommendations: </h3>
+            <table border="">
                 <tr>
-                    @*<td>
-                        @Html.DisplayFor(modelItem => item.Id)
-                    </td>*@
                     <td>
-                        @Html.DisplayFor(modelItem => item.Place)
+                        Place:
                     </td>
                     <td>
-                        @Html.DisplayFor(modelItem => item.Details)
+                        Details:
                     </td>
                     <td>
-                        @Html.DisplayFor(modelItem => item.ArrangmentDate)
+                        ArrangmentDate:
                     </td>
                     <td>
+                        Weather:
                     </td>
                 </tr>
-            }
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        @*<td>
+                                @Html.DisplayFor(modelItem => item.Id)
+                            </td>*@
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Place)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Details)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.ArrangmentDate)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Weather)
+                        </td>
+                        <td>
+                        </td>
+                    </tr>
+                }
 
-        </table>
+            </table>
+        </div>
     </div>
-</div>
+</body>
