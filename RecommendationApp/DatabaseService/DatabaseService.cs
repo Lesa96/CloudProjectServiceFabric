@@ -133,7 +133,13 @@ namespace DatabaseService
 
         public async Task RemoveRecommendation(Recommendation recommendation)
         {
-            await RE_Collection.DeleteOneAsync(Builders<Recommendation>.Filter.Eq("Place", recommendation.Place));
+            var results = await RE_Collection.FindAsync(x => x.Place.Equals(recommendation.Place));
+            var listResult = results.ToList();
+            foreach (var item in listResult)
+            {
+                await RE_Collection.DeleteOneAsync(Builders<Recommendation>.Filter.Eq("Id", item.Id)); 
+            }
+            
         }
     }
 }

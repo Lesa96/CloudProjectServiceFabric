@@ -86,6 +86,7 @@ namespace RecommendationService
                     else
                     {
                         var newHirstory = new List<Recommendation>();
+                        newHirstory.Add(recommendation);
                         await historyRecommendationList.AddOrUpdateAsync(tx, recommendation.Place, newHirstory, (key, value) => value);
                     }
                         

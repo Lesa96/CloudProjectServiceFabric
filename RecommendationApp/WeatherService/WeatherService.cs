@@ -20,6 +20,7 @@ namespace WeatherService
     /// </summary>
     internal sealed class WeatherService : StatelessService , IWeatherService
     {
+        //https://weatherstack.com/
         private const string api = "http://api.weatherstack.com/current?access_key=93602e2d7324bc707a86b984e679c60e&query=";
         public WeatherService(StatelessServiceContext context)
             : base(context)
